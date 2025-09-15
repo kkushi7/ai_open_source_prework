@@ -1,0 +1,19 @@
+/* Ensure the page has no scrollbars and the canvas fills the viewport */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+  background: #000; /* Optional: black background beyond the map */
+}
+
+canvas#game {
+  display: block; /* Removes inline-gap */
+  width: 100vw;
+  height: 100vh;
+}
+
+

@@ -8,6 +8,27 @@
   </head>
   <body>
     <canvas id="game"></canvas>
+    
+    <!-- Game HUD -->
+    <div id="hud">
+      <div class="hud-section">
+        <div class="hud-title">Player Info</div>
+        <div id="player-name">Loading...</div>
+        <div id="player-position">Position: --, --</div>
+      </div>
+      
+      <div class="hud-section">
+        <div class="hud-title">Connection</div>
+        <div id="connection-status" class="status-disconnected">Disconnected</div>
+        <div id="players-online">Players: 0</div>
+      </div>
+      
+      <div class="hud-section">
+        <div class="hud-title">Controls</div>
+        <div class="control-hint">Arrow Keys to Move</div>
+        <div class="control-hint">WASD also works</div>
+      </div>
+    </div>
 
     <script>
       (function () {
@@ -30,13 +51,53 @@
         let movementInterval = null;
         const MOVEMENT_INTERVAL = 50; // Send move command every 50ms for smoother movement
         let lastViewportUpdate = 0;
+        
+        // HUD elements
+        const playerNameEl = document.getElementById('player-name');
+        const playerPositionEl = document.getElementById('player-position');
+        const connectionStatusEl = document.getElementById('connection-status');
+        const playersOnlineEl = document.getElementById('players-online');
+        
+        // HUD update functions
+        function updateHUD() {
+          // Update player info
+          if (myPlayer) {
+            playerNameEl.textContent = myPlayer.username || 'Unknown';
+            playerPositionEl.textContent = `Position: ${Math.round(myPlayer.x)}, ${Math.round(myPlayer.y)}`;
+          }
+          
+          // Update connection status
+          if (ws) {
+            switch(ws.readyState) {
+              case WebSocket.CONNECTING:
+                connectionStatusEl.textContent = 'Connecting...';
+                connectionStatusEl.className = 'status-connecting';
+                break;
+              case WebSocket.OPEN:
+                connectionStatusEl.textContent = 'Connected';
+                connectionStatusEl.className = 'status-connected';
+                break;
+              case WebSocket.CLOSING:
+              case WebSocket.CLOSED:
+                connectionStatusEl.textContent = 'Disconnected';
+                connectionStatusEl.className = 'status-disconnected';
+                break;
+            }
+          }
+          
+          // Update players online count
+          const playerCount = Object.keys(players).length;
+          playersOnlineEl.textContent = `Players: ${playerCount}`;
+        }
 
         // WebSocket connection
         function connectToServer() {
           ws = new WebSocket('wss://codepath-mmorg.onrender.com');
+          updateHUD(); // Update HUD when connecting
           
           ws.onopen = function() {
             console.log('Connected to game server');
+            updateHUD(); // Update HUD when connected
             joinGame();
           };
           
@@ -47,12 +108,14 @@
           
           ws.onclose = function() {
             console.log('Disconnected from server');
+            updateHUD(); // Update HUD when disconnected
             // Attempt to reconnect after 3 seconds
             setTimeout(connectToServer, 3000);
           };
           
           ws.onerror = function(error) {
             console.error('WebSocket error:', error);
+            updateHUD(); // Update HUD on error
           };
         }
 
@@ -87,6 +150,7 @@
                 console.log('Joined game successfully. My player:', myPlayer);
                 updateViewport();
                 loadAvatarImages();
+                updateHUD(); // Update HUD when joined
               } else {
                 console.error('Join game failed:', message.error);
               }
@@ -96,6 +160,7 @@
               players[message.player.id] = message.player;
               avatars[message.avatar.name] = message.avatar;
               loadAvatarImages();
+              updateHUD(); // Update HUD when player joins
               break;
               
             case 'players_moved':
@@ -106,11 +171,13 @@
                 myPlayer = message.players[myPlayerId];
                 console.log('My player moved to:', myPlayer.x, myPlayer.y);
                 updateViewport();
+                updateHUD(); // Update HUD when player moves
               }
               break;
               
             case 'player_left':
               delete players[message.playerId];
+              updateHUD(); // Update HUD when player leaves
               break;
               
             default:
@@ -288,21 +355,25 @@
             }
             
             // Send move command for the first pressed key (prioritize first pressed)
-            const movementKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            const movementKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD'];
             for (const key of movementKeys) {
               if (pressedKeys.has(key)) {
                 let direction = null;
                 switch(key) {
                   case 'ArrowUp':
+                  case 'KeyW':
                     direction = 'up';
                     break;
                   case 'ArrowDown':
+                  case 'KeyS':
                     direction = 'down';
                     break;
                   case 'ArrowLeft':
+                  case 'KeyA':
                     direction = 'left';
                     break;
                   case 'ArrowRight':
+                  case 'KeyD':
                     direction = 'right';
                     break;
                 }
@@ -339,7 +410,7 @@
         function handleKeyDown(event) {
           if (pressedKeys.has(event.code)) return; // Already pressed
           
-          const movementKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+          const movementKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD'];
           if (movementKeys.includes(event.code)) {
             pressedKeys.add(event.code);
             startMovement();
@@ -355,7 +426,7 @@
           pressedKeys.delete(event.code);
           
           // If no movement keys are pressed, stop movement
-          const movementKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+          const movementKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD'];
           const anyMovementKeyPressed = movementKeys.some(key => pressedKeys.has(key));
           
           if (!anyMovementKeyPressed) {

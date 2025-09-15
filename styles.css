@@ -16,4 +16,75 @@ canvas#game {
   height: 100vh;
 }
 
+/* Game HUD */
+#hud {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  font-family: 'Arial', sans-serif;
+  pointer-events: none; /* Allow clicks to pass through to game */
+}
+
+.hud-section {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  min-width: 200px;
+  backdrop-filter: blur(5px);
+}
+
+.hud-title {
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#player-name {
+  color: #4CAF50;
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+#player-position {
+  color: #ccc;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+}
+
+#connection-status {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.status-connected {
+  color: #4CAF50;
+}
+
+.status-disconnected {
+  color: #f44336;
+}
+
+.status-connecting {
+  color: #ff9800;
+}
+
+#players-online {
+  color: #ccc;
+  font-size: 12px;
+}
+
+.control-hint {
+  color: #ccc;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
 
